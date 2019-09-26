@@ -1,14 +1,5 @@
-import tensorflow as tf
-from tensorflow.keras.models import Model, load_model
-from joblib import dump, load
-import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-
-from sklearn.decomposition import PCA
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis as LDA
-from sklearn.preprocessing import StandardScaler, MinMaxScaler
-
+import numpy as np
 
 features = [
     "duration",
@@ -55,19 +46,7 @@ features = [
     "class"
 ]
 
-data = pd.read_csv('dataset/KDDTrain+.txt', sep=',', header=None).drop(columns=[42])
-data.columns = features
-
-y_train = data['class'][data['class'] != 'normal']
-
-categorical = pd.get_dummies(data[["protocol_type", "service", "flag"]])
-
-data.drop(columns=["protocol_type", "service", "flag", "class"], inplace=True)
-data = pd.concat([categorical, data], axis=1)
-
-x_train = MinMaxScaler().fit_transform(data)
-
-y_train.replace({
+replace_map = {
     'warezmaster' : 'R2L',
     'warezclient' : 'R2L',
     'teardrop' : 'DoS',
@@ -89,27 +68,43 @@ y_train.replace({
     'guess_passwd' : 'R2L',
     'ftp_write' : 'R2L',
     'buffer_overflow' : 'U2R',
-    'back': 'DoS'
-}, inplace=True)
+    'back': 'DoS',
+    'xterm': 'U2R',
+    'ps' : 'U2R',
+    'xlock' : 'R2L',
+    'xsnoop' : 'R2L',
+    'worm' : 'DoS',
+    'udpstorm' : 'DoS',
+    'sqlattack' : 'U2R',
+    'snmpguess' : 'R2L',
+    'snmpgetattack' : 'R2L',
+    'sendmail' : 'R2L',
+    'saint' : 'Probe',
+    'processtable' : 'DoS',
+    'named' : 'R2L',
+    'mscan' : 'Probe',
+    'httptunnel' : 'R2L',
+    'apache2' : 'DoS',
+    'mailbomb' : 'DoS'
+}
 
-y_train = pd.Series(y_train, dtype="category")
+_csv_train_data = pd.read_csv('dataset/KDDTrain+.txt', sep=',', header=None).drop(columns=[42])
+_csv_train_data.columns = features
 
-n_categories = len(y_train.cat.categories)
+def get_dataset(mode=None):
+    categorical = pd.get_dummies(_csv_train_data[['protocol_type', 'service', 'flag']])
+    data = _csv_train_data.drop(columns=['protocol_type', 'service', 'flag'])
+    data = pd.concat([categorical, data], axis=1)
 
-vae = load_model('models/vae.meta')
-score = vae.evaluate(x_train, batch_size=10)
+    if mode == 'normal':
+        data = data[data['class'] == 'normal']
+    elif mode == 'anormal':
+        data = data[data['class'] != 'normal']
+    else:
+        data = data
 
-print(score)
-exit()
-
-transformed = PCA(n_components=2).fit_transform(encoded_data)
-
-cmap = plt.get_cmap('viridis', n_categories)
-
-fig, ax = plt.subplots()
-cax = ax.scatter(transformed[:, 0], transformed[:, 1], c=y_train.cat.codes, cmap=cmap)
-cbar = fig.colorbar(cax)
-tick_locs = (np.arange(n_categories) + 0.5)*(n_categories-1)/n_categories
-cbar.set_ticks(tick_locs)
-cbar.set_ticklabels(y_train.cat.categories)
-plt.show()
+    x = data.drop(columns=['class']).astype('float64')
+    y = data['class'].replace(replace_map)
+    y = pd.Series(y, dtype='category')
+    
+    return x, y;
