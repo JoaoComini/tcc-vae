@@ -24,9 +24,12 @@
     - Encoded data:
         - __Accuracy__: 96.60%
 
-2. Random Forest Classifier:
+4. Random Forest Classifier:
     - Normal data:
         - __Accuracy__: 99.89%
     - Encoded data:
         - __Accuracy__: 99.74%
+
+5. Threshold Approach:
+    - __Accuracy__: 93.51%
 

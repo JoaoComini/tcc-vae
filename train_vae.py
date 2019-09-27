@@ -1,10 +1,9 @@
 import tensorflow as tf
 from tensorflow.keras import backend as K
 from tensorflow.keras.losses import binary_crossentropy
-from tensorflow.keras.callbacks import EarlyStopping, ModelCheckpoint
+from tensorflow.keras.callbacks import EarlyStopping
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.decomposition import PCA
-from sklearn.metrics import accuracy_score
 from sklearn.model_selection import train_test_split
 from vae import Vae
 import kdd
@@ -47,7 +46,7 @@ if __name__ == '__main__':
             batch_size=batch_size, 
             shuffle=True,
             callbacks=[
-                EarlyStopping(monitor='val_loss', patience=3)
+                EarlyStopping(monitor='val_loss', patience=3),
             ])
 
         plt.plot(vae_history.history['loss'])
@@ -57,8 +56,6 @@ if __name__ == '__main__':
         plt.xlabel('Epoch')
         plt.legend(['train', 'test'], loc='upper right')
         plt.show()
-
-        vae.model.save_weights(args.file)
 
     if args.plot:
         x_true, _ = kdd.get_dataset()
